@@ -25,12 +25,17 @@ MYSQL_USER = config.get("database", "MYSQL_USER")
 MYSQL_DB = config.get("database", "MYSQL_DB")
 MYSQL_TABLE = config.get("database", "MYSQL_TABLE")
 
+db = web.database(dbn='mysql', host=MYSQL_SERVER, db=MYSQL_DB, user=MYSQL_USER,
+                  pw=MYSQL_PASSWD)
+
 # "/api/" is automatically prepended to each of these
 urls = (
  '/xbrowserstartup/?', "CrossBrowserStartupHandler",
  '/xbrowserstartup_add/?', "CrossBrowserStartupAddResult",
  '/s1s2_add/?', "S1S2RawFennecAddResult",
- '/s1s2/?',"S1S2RawFennec"
+ '/s1s2/?',"S1S2RawFennec",
+ '/rawfennecstart/params/?', 'RawFennecStartParameters',
+ '/rawfennecstart/data/?', 'RawFennecStartData'
 )
 
 class CrossBrowserStartupAddResult():
@@ -109,6 +114,38 @@ class S1S2RawFennec():
 
         params,body = templeton.handlers.get_request_parms()
         print params
+
+
+class RawFennecStartData(object):
+
+    @templeton.handlers.json_response
+    def GET(self):
+        query, body = templeton.handlers.get_request_parms()
+        testname = query['testname'][0]
+        phoneids = [x.strip() for x in query['phoneids'][0].split(',')]
+        start = query['start'][0]
+        end = query['end'][0]
+
+        results = defaultdict(lambda: defaultdict(dict))
+
+        revisions = [x['revision'] for x in db.query('select distinct revision from rawfennecstart where blddate >= $start and blddate <= $end',
+                                                     vars=dict(start=start, end=end))]
+
+        for phoneid in phoneids:
+            for revision in revisions:
+                avg, blddate = db.where('rawfennecstart', what='AVG(throbberstart-starttime),blddate', phoneid=phoneid, revision=revision, testname=testname)[0].values()
+                results[phoneid][testname][blddate.isoformat()] = float(avg)
+        return results
+
+
+class RawFennecStartParameters(object):
+
+    @templeton.handlers.json_response
+    def GET(self):
+        phones = [x['phoneid'] for x in db.query('select distinct phoneid from rawfennecstart')]
+        tests = [x['testname'] for x in db.query('select distinct testname from rawfennecstart')]
+        return {'phones': phones, 'tests': tests}
+    
 
 class CrossBrowserStartupHandler():
     @templeton.handlers.json_response
