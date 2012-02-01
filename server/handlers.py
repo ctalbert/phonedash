@@ -122,7 +122,7 @@ class RawFennecStartData(object):
     def GET(self):
         query, body = templeton.handlers.get_request_parms()
         testname = query['testname'][0]
-        phoneids = [x.strip() for x in query['phoneids'][0].split(',')]
+        phoneids = [x.strip() for x in query['phoneid'][0].split(',')]
         start = query['start'][0]
         end = query['end'][0]
 
