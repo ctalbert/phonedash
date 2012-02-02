@@ -791,7 +791,7 @@ function showRawFennecStartupCharts(params) {
   params.phoneid = params.phoneid.join(',');
 
   //Build Resource URL
-  var resourceURL = 'api/rawfennecstart/data/?' + 
+  var resourceURL = 'api/s1s2/data/?' + 
     Object.keys(params).filter(function(name) {
       return (params[name] !== "all");
     }).map(function(name) {
@@ -804,9 +804,9 @@ function showRawFennecStartupCharts(params) {
     var points = [];
     for (phoneid in data) {
       points = [];
-      for (blddate in data[phoneid][params.testname]['throbberstart']) {
+      for (blddate in data[phoneid][params.testname][params.metric]) {
         points.push([new Date(blddate).getTime(),
-                     data[phoneid][params.testname]['throbberstart'][blddate]]);
+                     data[phoneid][params.testname][params.metric][blddate]]);
       }
       points.sort(function(x, y) { return x[0] < y[0]; });
       series.push({ data: points, label: phoneName(phoneid) });
@@ -821,7 +821,7 @@ function showRawFennecStartupCharts(params) {
         lines: { show: true }
       },
       xaxis: { mode: 'time' },
-      yaxis: { min: 0, axisLabel: 'time to throbber start' },
+      yaxis: { min: 0, axisLabel: 'time (ms)' },
       legend: { position: 'nw' }
     });
   });
@@ -902,7 +902,7 @@ $(function() {
          $('#nav li').removeClass('active');
          $('#nav_rawfennecstartup').addClass('active');
 
-         $.getJSON('api/rawfennecstart/params/', function(data) {
+         $.getJSON('api/s1s2/params/', function(data) {
            $('#phonemenu').html('');
            $('#testmenu').html('');
            var i;

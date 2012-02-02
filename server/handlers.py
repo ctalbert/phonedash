@@ -33,9 +33,8 @@ urls = (
  '/xbrowserstartup/?', "CrossBrowserStartupHandler",
  '/xbrowserstartup_add/?', "CrossBrowserStartupAddResult",
  '/s1s2_add/?', "S1S2RawFennecAddResult",
- '/s1s2/?',"S1S2RawFennec",
- '/rawfennecstart/params/?', 'RawFennecStartParameters',
- '/rawfennecstart/data/?', 'RawFennecStartData'
+ '/s1s2/params/?',"S1S2RawFennecParameters",
+ '/s1s2/data/?', 'S1S2RawFennecData'
 )
 
 class CrossBrowserStartupAddResult():
@@ -104,19 +103,23 @@ class S1S2RawFennecAddResult():
 
         conn.commit()
 
-class S1S2RawFennec():
+
+class S1S2RawFennecParameters(object):
+
     @templeton.handlers.json_response
     def GET(self):
-        conn = MySQLdb.connect(host = MYSQL_SERVER,
-                               user = MYSQL_USER,
-                               passwd = MYSQL_PASSWD,
-                               db = MYSQL_DB)
-
-        params,body = templeton.handlers.get_request_parms()
-        print params
+        phones = [x['phoneid'] for x in db.query(
+            'select distinct phoneid from rawfennecstart')]
+        tests = [x['testname'] for x in db.query(
+            'select distinct testname from rawfennecstart')]
+        return {'phones': phones, 'tests': tests}
 
 
-class RawFennecStartData(object):
+class S1S2RawFennecData(object):
+
+    metrics = { 'throbberstart': 'AVG(throbberstart-starttime)',
+                'throbberstop': 'AVG(throbberstop-throbberstart)',
+                'totaldrawing': 'AVG(enddrawing-starttime)' }
 
     @templeton.handlers.json_response
     def GET(self):
@@ -125,6 +128,7 @@ class RawFennecStartData(object):
         phoneids = [x.strip() for x in query['phoneid'][0].split(',')]
         start = query['start'][0]
         end = query['end'][0]
+        metric = query['metric'][0]
 
         # results[phone][test][metric][blddate] = value
         results = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
@@ -136,28 +140,19 @@ class RawFennecStartData(object):
 
         for phoneid in phoneids:
             for revision in revisions:
-                avg, blddate = db.select(
+                data = db.select(
                   'rawfennecstart',
-                  what='AVG(throbberstart-starttime),blddate',
-                  where='phoneid=$phoneid and revision=$revision and testname=$testname and throbberstart>0',
+                  what=self.metrics[metric] + ',blddate',
+                  where='phoneid=$phoneid and revision=$revision and testname=$testname and throbberstart>0 and throbberstop>0',
                   vars=dict(phoneid=phoneid, revision=revision,
-                            testname=testname))[0].values()
+                            testname=testname))[0]
+                avg = data[self.metrics[metric]]
+                blddate = data['blddate']
                 if avg is None:
                     continue
-                results[phoneid][testname]['throbberstart'][blddate.isoformat()] = float(avg)
+                results[phoneid][testname][metric][blddate.isoformat()] = float(avg)
         return results
 
-
-class RawFennecStartParameters(object):
-
-    @templeton.handlers.json_response
-    def GET(self):
-        phones = [x['phoneid'] for x in db.query(
-            'select distinct phoneid from rawfennecstart')]
-        tests = [x['testname'] for x in db.query(
-            'select distinct testname from rawfennecstart')]
-        return {'phones': phones, 'tests': tests}
-    
 
 class CrossBrowserStartupHandler():
     @templeton.handlers.json_response
