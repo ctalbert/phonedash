@@ -760,12 +760,6 @@ function showXbrowserStartupCharts(params, dname, pname, wname) {
   });
 }
 
-/** Transforms date as string (e.g. "2012-01-01") to a Date object. */
-function getDate(datestr) {
-  var parts = datestr.split('T')[0].split('-');
-  return new Date(parts[0], parseInt(parts[1]) - 1, parts[2]);
-}
-
 
 var testmap = {
   'remote-twitter': 'Remote Twitter Page',
@@ -810,12 +804,16 @@ function showRawFennecStartupCharts(params) {
     var points = [];
     for (phoneid in data) {
       points = [];
-      for (blddate in data[phoneid][params.testname]) {
-        points.push([getDate(blddate).getTime(),
-                     data[phoneid][params.testname][blddate]]);
+      for (blddate in data[phoneid][params.testname]['throbberstart']) {
+        points.push([new Date(blddate).getTime(),
+                     data[phoneid][params.testname]['throbberstart'][blddate]]);
       }
       points.sort(function(x, y) { return x[0] < y[0]; });
       series.push({ data: points, label: phoneName(phoneid) });
+    }
+    if (series.length == 0) {
+      $('#container').html(ich.rightpanel_nodata());
+      return;
     }
     $.plot($('#container'), series, {
       series: {

@@ -126,15 +126,25 @@ class RawFennecStartData(object):
         start = query['start'][0]
         end = query['end'][0]
 
-        results = defaultdict(lambda: defaultdict(dict))
+        # results[phone][test][metric][blddate] = value
+        results = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
 
-        revisions = [x['revision'] for x in db.query('select distinct revision from rawfennecstart where blddate >= $start and blddate <= $end',
-                                                     vars=dict(start=start, end=end))]
+        revisions = [x['revision'] for x in db.query(
+            'select distinct revision from rawfennecstart '
+            'where blddate >= $start and blddate <= $end',
+            vars=dict(start=start, end=end))]
 
         for phoneid in phoneids:
             for revision in revisions:
-                avg, blddate = db.where('rawfennecstart', what='AVG(throbberstart-starttime),blddate', phoneid=phoneid, revision=revision, testname=testname)[0].values()
-                results[phoneid][testname][blddate.isoformat()] = float(avg)
+                avg, blddate = db.select(
+                  'rawfennecstart',
+                  what='AVG(throbberstart-starttime),blddate',
+                  where='phoneid=$phoneid and revision=$revision and testname=$testname and throbberstart>0',
+                  vars=dict(phoneid=phoneid, revision=revision,
+                            testname=testname))[0].values()
+                if avg is None:
+                    continue
+                results[phoneid][testname]['throbberstart'][blddate.isoformat()] = float(avg)
         return results
 
 
@@ -142,8 +152,10 @@ class RawFennecStartParameters(object):
 
     @templeton.handlers.json_response
     def GET(self):
-        phones = [x['phoneid'] for x in db.query('select distinct phoneid from rawfennecstart')]
-        tests = [x['testname'] for x in db.query('select distinct testname from rawfennecstart')]
+        phones = [x['phoneid'] for x in db.query(
+            'select distinct phoneid from rawfennecstart')]
+        tests = [x['testname'] for x in db.query(
+            'select distinct testname from rawfennecstart')]
         return {'phones': phones, 'tests': tests}
     
 
