@@ -32,6 +32,8 @@
 </body>
 <script src="/templeton/scripts/jquery-1.6.1.min.js"></script>
 <script src="/templeton/scripts/jquery-ui-1.8.13.custom.min.js"></script>
+<script src="/templeton/scripts/jquery.flot.min.js"></script>
+<script src="/templeton/scripts/jquery.flot.axislabels.js"></script>
 <script src="js/SS.min.js"></script>
 <script src="js/ICanHaz.min.js"></script>
 <script src="js/highcharts.js"></script>
@@ -188,19 +190,21 @@
     <div class="formholder">
       <form id="data-selector">
         <label>Test:</label>
-        <select name="test">
-          <option value="remote-twitter">Remote Twitter Page</option>
-          <option value="local-twitter">Local Twitter Page</option>
-          <option value="remote-blank">Remote Blank Page</option>
-          <option value="local-blank">Local Blank Page</option>
+        <select name="testname" id="testmenu">
+        </select>
+        <br/>
+        <label>Metric:</label>
+        <select name="metric">
+          <option value="throbberstart">time to throbber start</option>
+          <option value="throbberstop">time to throbber stop</option>
+          <option value="totaldrawing">total drawing time</option>
         </select>
         <br/>
         <label>Phones:</label>
-        <input type="checkbox" name="phone" value="galaxy_nexus">Galaxy Nexus</input>
-        <input type="checkbox" name="phone" value="samsung_gs2">Samsung Galaxy SII</input>
-        <input type="checkbox" name="phone" value="nexus_s">Nexus S </input>
-        <input type="checkbox" name="phone" value="nexus_one">Nexus One</input>
-        <input type="checkbox" name="phone" value="droid_pro">Droid Pro</input>
+        <div id="phonemenu" class="optionmenu">
+          loading...<br/>
+        </div>
+        <div style="clear:both"></div>
         <label>Dates: </label>
         <select name="date">
             <option value="7">Previous Week</option>
@@ -216,8 +220,24 @@
   </div>
 </script>
 
+<script id="testname_option" type="text/html">
+  <option value="{{ testname }}">{{ testdescr }}</option>
+</script>
+
+<script id="phoneid_checkbox" type="text/html">
+  <input type="checkbox" name="phoneid" value="{{ phoneid }}"> {{ phonename }}</input><br/>
+</script>
+
 <script id="rawfennec_rightpanel" type="text/html">
-  <div id="container"</div>
+  <div id="container"></div>
+</script>
+
+<script id="rightpanel_loading" type="text/html">
+  <div>loading...</div>
+</script>
+
+<script id="rightpanel_nodata" type="text/html">
+  <div>no data</div>
 </script>
 
 </html>

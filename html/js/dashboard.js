@@ -760,21 +760,70 @@ function showXbrowserStartupCharts(params, dname, pname, wname) {
   });
 }
 
+
+var testmap = {
+  'remote-twitter': 'Remote Twitter Page',
+  'local-twitter': 'Local Twitter Page',
+  'remote-blank': 'Remote Blank Page',
+  'local-blank': 'Local Blank Page'
+};
+
+var phonemap = {
+  'galaxy_nexus': 'Galaxy Nexus',
+  'samsung_gs2': 'Samsung Galaxy SII',
+  'nexus_s': 'Nexus S',
+  'nexus_one': 'Nexus One',
+  'droid_pro': 'Droid Pro'
+};
+
+function testDescr(testname) {
+  return (testname in testmap) ? testmap[testname] : testname;
+}
+
+function phoneName(phoneid) {
+  return (phoneid in phonemap) ? phonemap[phoneid] : phoneid;
+}
+
+
 function showRawFennecStartupCharts(params) {
+  $('#container').html(ich.rightpanel_loading());
+
+  params.phoneid = params.phoneid.join(',');
+
   //Build Resource URL
-  var resourceURL = 'api/s1s2/?' + 
+  var resourceURL = 'api/s1s2/data/?' + 
     Object.keys(params).filter(function(name) {
       return (params[name] !== "all");
     }).map(function(name) {
       return name + "=" + params[name];
     }).join("&");
   
-  var data = $.getJSON(resourceURL, function(data) {
-
-      var chart;
-      jQuery(document).ready(function() {
-        console.log(data);
-      });
+  $.getJSON(resourceURL, function(data) {
+    $('#container').html('');
+    var series = [];
+    var points = [];
+    for (phoneid in data) {
+      points = [];
+      for (blddate in data[phoneid][params.testname][params.metric]) {
+        points.push([new Date(blddate).getTime(),
+                     data[phoneid][params.testname][params.metric][blddate]]);
+      }
+      points.sort(function(x, y) { return x[0] < y[0]; });
+      series.push({ data: points, label: phoneName(phoneid) });
+    }
+    if (series.length == 0) {
+      $('#container').html(ich.rightpanel_nodata());
+      return;
+    }
+    $.plot($('#container'), series, {
+      series: {
+        points: { show: true },
+        lines: { show: true }
+      },
+      xaxis: { mode: 'time' },
+      yaxis: { min: 0, axisLabel: 'time (ms)' },
+      legend: { position: 'nw' }
+    });
   });
 }
 
@@ -852,17 +901,48 @@ $(function() {
          $('#floatright').html(ich.rawfennec_rightpanel());
          $('#nav li').removeClass('active');
          $('#nav_rawfennecstartup').addClass('active');
+
+         $.getJSON('api/s1s2/params/', function(data) {
+           $('#phonemenu').html('');
+           $('#testmenu').html('');
+           var i;
+           for (i = 0; i < data.phones.length; i++) {
+             $('#phonemenu').append(ich.phoneid_checkbox(
+               { phoneid: data.phones[i], phonename: phoneName(data.phones[i]) }
+             ));
+           }
+           for (i = 0; i < data.tests.length; i++) {
+             $('#testmenu').append(ich.testname_option(
+               { testname: data.tests[i], testdescr: testDescr(data.tests[i]) }
+             ));
+           }
+         });
          
          // Get form request
          $('#data-selector').submit(function(event){
+           function dateStr(d) {
+             function pad(n) { return n < 10 ? '0' + n : n; }  
+             return d.getFullYear() +
+                    '-' + pad(d.getMonth() + 1) +
+                    '-' + pad(d.getDate());
+           }
            event.preventDefault();
            var values = {};
+           var now = new Date();
+           var today = new Date(now.getFullYear(), now.getMonth(),
+                                now.getDate());
            $.each($('#data-selector').serializeArray(), function(i, field) {
-             console.log('field name: ' + field.name);
-             console.log('field.checked: ' + field.checked);
-             console.log('field.value: ' + field.value);
-             if (field.name == 'phone' && field.checked) {
-               values[field.name].push(field.value);
+             if (field.name == 'phoneid') {
+               if (field.name in values) {
+                 values[field.name].push(field.value);
+               } else {
+                 values[field.name] = [field.value];
+               }
+             } else if (field.name == 'date') {
+               values['start'] = dateStr(new Date(today.getFullYear(),
+                                                  today.getMonth(),
+                                                  today.getDate() - field.value));
+               values['end'] = dateStr(today);
              } else {
                values[field.name] = field.value;
              }
