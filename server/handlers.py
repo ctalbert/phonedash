@@ -81,7 +81,7 @@ class S1S2RawFennecAddResult():
         r = json.loads(web.data())
         print r
         # Get our dates correct
-        blddate = datetime.strptime(r["data"]["blddate"], "%Y-%m-%dT%H:%M:%S")
+        blddate = datetime.fromtimestamp(float(r["data"]["blddate"]))
         now = datetime.now()
         c = conn.cursor()
         query = "INSERT INTO " + MYSQL_DB + "." + "rawfennecstart " + "VALUES(\
