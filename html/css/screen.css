@@ -129,9 +129,10 @@ li a:hover{
     margin-bottom:20px;
 	width:90%;
 }
-#container{
-    width:90%;
-    margin:10px auto;
+#container {
+  width: 575px;
+  height: 440px;
+  margin:10px auto;
 }
 #container3{
     width:90%;
@@ -148,9 +149,10 @@ li a:hover{
 	width:100%;
 }
 label{
-	float:left;
-	clear:both;
-	width:100px;
-
-
+  float:left;
+  clear:both;
+  width:100px;
+}
+.optionmenu {
+  float:left;
 }
