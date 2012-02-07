@@ -822,7 +822,7 @@ function showRawFennecStartupCharts(params) {
       },
       xaxis: { mode: 'time' },
       yaxis: { min: 0, axisLabel: 'time (ms)' },
-      legend: { position: 'nw' }
+      legend: { position: 'se' }
     });
   });
 }
