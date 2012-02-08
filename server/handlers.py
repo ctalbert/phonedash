@@ -112,7 +112,9 @@ class S1S2RawFennecParameters(object):
             'select distinct phoneid from rawfennecstart')]
         tests = [x['testname'] for x in db.query(
             'select distinct testname from rawfennecstart')]
-        return {'phones': phones, 'tests': tests}
+        products = [x['productname'] for x in db.query(
+            'select distinct productname from rawfennecstart')]
+        return {'phones': phones, 'tests': tests, 'products': products}
 
 
 class S1S2RawFennecData(object):
@@ -129,6 +131,7 @@ class S1S2RawFennecData(object):
         start = query['start'][0]
         end = query['end'][0]
         metric = query['metric'][0]
+        product = query['product'][0]
 
         # results[phone][test][metric][blddate] = value
         results = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
@@ -143,9 +146,9 @@ class S1S2RawFennecData(object):
                 data = db.select(
                   'rawfennecstart',
                   what=self.metrics[metric] + ',blddate',
-                  where='phoneid=$phoneid and revision=$revision and testname=$testname and throbberstart>0 and throbberstop>0',
+                  where='phoneid=$phoneid and revision=$revision and testname=$testname and productname=$product and throbberstart>0 and throbberstop>0',
                   vars=dict(phoneid=phoneid, revision=revision,
-                            testname=testname))[0]
+                            testname=testname, product=product))[0]
                 avg = data[self.metrics[metric]]
                 blddate = data['blddate']
                 if avg is None:
