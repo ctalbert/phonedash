@@ -186,9 +186,13 @@
 </script>
 
 <script id="rawfennec_leftpanel" type="text/html">
-  <div id="contentmenu">
+  <div id="content-menu">
     <div class="formholder">
       <form id="data-selector">
+        <label>Tree:</label>
+        <select name="product" id="productmenu">
+        </select>
+        <br/>
         <label>Test:</label>
         <select name="testname" id="testmenu">
         </select>
@@ -226,6 +230,10 @@
 
 <script id="phoneid_checkbox" type="text/html">
   <input type="checkbox" name="phoneid" value="{{ phoneid }}"> {{ phonename }}</input><br/>
+</script>
+
+<script id="product_option" type="text/html">
+  <option value="{{ productname }}">{{ productdescr }}</option>
 </script>
 
 <script id="rawfennec_rightpanel" type="text/html">
