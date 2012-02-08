@@ -776,6 +776,12 @@ var phonemap = {
   'droid_pro': 'Droid Pro'
 };
 
+var productmap = {
+  'org.mozilla.fennec': 'Nightly',
+  'org.mozilla.fennec_aurora': 'Aurora',
+  'org.mozilla.firefox': 'Beta'
+};
+
 function testDescr(testname) {
   return (testname in testmap) ? testmap[testname] : testname;
 }
@@ -784,6 +790,9 @@ function phoneName(phoneid) {
   return (phoneid in phonemap) ? phonemap[phoneid] : phoneid;
 }
 
+function productDescr(productname) {
+  return (productname in productmap) ? productmap[productname] : productname;
+}
 
 function showRawFennecStartupCharts(params) {
   $('#container').html(ich.rightpanel_loading());
@@ -820,7 +829,8 @@ function showRawFennecStartupCharts(params) {
         points: { show: true },
         lines: { show: true }
       },
-      xaxis: { mode: 'time' },
+      xaxis: { mode: 'time', timeformat: '%b %d',
+               axisLabel: 'build date' },
       yaxis: { min: 0, axisLabel: 'time (ms)' },
       legend: { position: 'se' }
     });
@@ -914,6 +924,12 @@ $(function() {
            for (i = 0; i < data.tests.length; i++) {
              $('#testmenu').append(ich.testname_option(
                { testname: data.tests[i], testdescr: testDescr(data.tests[i]) }
+             ));
+           }
+           for (i = 0; i < data.products.length; i++) {
+             $('#productmenu').append(ich.product_option(
+               { productname: data.products[i],
+                 productdescr: productDescr(data.products[i]) }
              ));
            }
          });
