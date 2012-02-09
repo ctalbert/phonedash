@@ -11,8 +11,6 @@ body{
     background: #999999;
     background: url('../images/bg.png');
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    font-weight: 200;
-
 }
 
 #topbar{
@@ -155,4 +153,12 @@ label{
 }
 .optionmenu {
   float:left;
+}
+
+.tooltip {
+  position: absolute;
+  border: 1px solid #fdd;
+  padding: 2px;
+  background-color: #fee;
+  opacity: 0.80;
 }

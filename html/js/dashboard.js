@@ -794,6 +794,46 @@ function productDescr(productname) {
   return (productname in productmap) ? productmap[productname] : productname;
 }
 
+function showLineTooltip(x, y, timestamp, value) {
+  var date = new Date(Math.floor(timestamp));
+  var content = ich.flot_tooltip({ date: date.toDateString(),
+                                   value: Math.floor(value) });
+  $(content).css({
+    top: y + 5,
+    left: x + 5
+  }).appendTo('body');
+}
+
+
+// calls toolTipFn when we detect that the current selection has changed
+function plotHover(toolTipFn) {
+  return function(event, pos, item) {
+    var previousPoint = null;
+    var prevX = 0;
+    var prevY = 0;
+    $('#container').bind('plothover', function (event, pos, item) {
+      if (item) {
+        if (previousPoint != item.datapoint) {
+          previousPoint = item.datapoint;
+          prevX = pos.pageX;
+          prevY = pos.pageY;
+          $('.tooltip').remove();
+          toolTipFn(item);
+        }
+      } else {
+        if (previousPoint) {
+          if (pos.pageX < (prevX - 5) || pos.pageX > (prevX + 10 + $('.tooltip').width()) ||
+              pos.pageY < (prevY - 5) || pos.pageY > (prevY + 10 + $('.tooltip').height())) {
+            $('.tooltip').remove();
+            previousPoint = null;
+          }
+        }
+      }
+    });
+  };
+}
+
+
 function showRawFennecStartupCharts(params) {
   $('#container').html(ich.rightpanel_loading());
 
@@ -820,21 +860,32 @@ function showRawFennecStartupCharts(params) {
       points.sort(function(x, y) { return x[0] < y[0]; });
       series.push({ data: points, label: phoneName(phoneid) });
     }
+
     if (series.length == 0) {
       $('#container').html(ich.rightpanel_nodata());
       return;
     }
+
     $.plot($('#container'), series, {
+      grid: { hoverable: true },
       series: {
         points: { show: true },
         lines: { show: true }
       },
       xaxis: { mode: 'time', timeformat: '%b %d',
-               axisLabel: 'build date' },
+               axisLabel: 'build date', tickSize: [1, 'day'] },
       yaxis: { min: 0, axisLabel: 'time (ms)' },
       legend: { position: 'se' }
     });
   });
+
+  $('#container').bind('plothover',
+    plotHover(function (item) {
+      var x = item.datapoint[0].toFixed(2),
+          y = item.datapoint[1];
+      showLineTooltip(item.pageX, item.pageY, x, y);
+    })
+  );
 }
 
 $(function() {
